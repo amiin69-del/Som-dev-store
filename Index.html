@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Som dev store – Android app store</title>
+<meta name="theme-color" content="#12304a">
+<style>
+:root{
+  --bg:#eef2f5; --card:#ffffff; --ink:#12304a; --muted:#5b6f80;
+  --line:#d5dee6; --accent:#0f8b6d; --accent-ink:#ffffff; --chip:#e1ebf2;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0d1b28; --card:#142636; --ink:#e8f0f6; --muted:#93a8b8;
+        --line:#24394b; --accent:#2fc29a; --accent-ink:#06231b; --chip:#1d3346;}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+header{background:#12304a;color:#fff;padding:28px 18px 22px}
+.wrap{max-width:720px;margin:0 auto}
+h1{margin:0 0 4px;font-size:1.7rem;letter-spacing:-.02em}
+header p{margin:0;color:#b9cddd}
+.search{margin:16px 0 0}
+.search input{width:100%;padding:12px 14px;border-radius:10px;border:0;font-size:1rem;
+  background:#fff;color:#12304a}
+main{padding:18px}
+.help{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:16px}
+.help summary{cursor:pointer;font-weight:600}
+.help ol{margin:10px 0 0;padding-left:20px;color:var(--muted)}
+.app{display:flex;gap:14px;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:14px;margin-bottom:12px}
+.icon{flex:none;width:64px;height:64px;border-radius:16px;display:grid;place-items:center;
+  font-size:2rem;color:#fff;overflow:hidden}
+.icon img{width:100%;height:100%;object-fit:cover}
+.info{flex:1;min-width:0}
+.info h2{margin:0;font-size:1.1rem}
+.info p{margin:4px 0 8px;color:var(--muted);font-size:.93rem}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.meta span{background:var(--chip);border-radius:6px;padding:2px 8px;font-size:.78rem}
+.btn{display:inline-block;background:var(--accent);color:var(--accent-ink);text-decoration:none;
+  font-weight:700;padding:10px 18px;border-radius:10px}
+.btn:focus-visible,.search input:focus-visible,summary:focus-visible{outline:3px solid #f2b705;outline-offset:2px}
+.btn.soon{background:var(--chip);color:var(--muted);pointer-events:none}
+.empty{text-align:center;color:var(--muted);padding:30px 0}
+footer{text-align:center;color:var(--muted);font-size:.85rem;padding:10px 18px 30px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Som dev Apps</h1>
+  <p>Free Android apps. Tap Download, then install.</p>
+  <div class="search"><input id="q" type="search" placeholder="Search apps" aria-label="Search apps"></div>
+</div></header>
+
+<main><div class="wrap">
+  <details class="help">
+    <summary>How to install an app</summary>
+    <ol>
+      <li>Tap Download on the app you want.</li>
+      <li>Open the downloaded .apk file.</li>
+      <li>If Android asks, tap Settings and allow installs from this browser.</li>
+      <li>Go back and tap Install.</li>
+    </ol>
+  </details>
+  <div id="list"></div>
+</div></main>
+
+<footer>Made by Miloz</footer>
+
+<script>
+/* ===== EDIT HERE: add or change your apps ===== */
+/* apk = link to the .apk file (GitHub Releases, Supabase Storage, or a file in your repo).
+   icon = link to an image (optional). If empty, the first letter is shown. */
+const APPS = [
+  {
+    name: "Quiz & Puzzle",
+    description: "Answer quizzes, solve puzzles, and climb the leaderboard.",
+    version: "1.0.0", size: "25 MB", color: "#7b4bd6",
+    icon: "", apk: ""
+  },
+  {
+    name: "Momentum",
+    description: "Track your habits and study time every day.",
+    version: "1.0.0", size: "30 MB", color: "#0f8b6d",
+    icon: "", apk: ""
+  },
+  {
+    name: "Elmwood Trail",
+    description: "A mystery story game. Build your character and solve the case.",
+    version: "1.0.0", size: "35 MB", color: "#c2562b",
+    icon: "", apk: ""
+  }
+];
+/* ============================================== */
+
+const list = document.getElementById("list");
+const q = document.getElementById("q");
+
+function render(){
+  const term = q.value.trim().toLowerCase();
+  const shown = APPS.filter(a => (a.name + " " + a.description).toLowerCase().includes(term));
+  list.innerHTML = "";
+  if(!shown.length){
+    list.innerHTML = '<div class="empty">No apps found.</div>';
+    return;
+  }
+  shown.forEach(a => {
+    const el = document.createElement("article");
+    el.className = "app";
+
+    const icon = document.createElement("div");
+    icon.className = "icon";
+    icon.style.background = a.color || "#12304a";
+    if(a.icon){
+      const img = document.createElement("img");
+      img.src = a.icon; img.alt = "";
+      img.onerror = () => { img.remove(); icon.textContent = a.name[0]; };
+      icon.appendChild(img);
+    } else { icon.textContent = a.name[0]; }
+
+    const info = document.createElement("div");
+    info.className = "info";
+    const h = document.createElement("h2"); h.textContent = a.name;
+    const p = document.createElement("p"); p.textContent = a.description;
+    const meta = document.createElement("div"); meta.className = "meta";
+    [a.version && "Version " + a.version, a.size].filter(Boolean).forEach(t => {
+      const s = document.createElement("span"); s.textContent = t; meta.appendChild(s);
+    });
+    const btn = document.createElement("a");
+    btn.className = "btn";
+    if(a.apk){ btn.href = a.apk; btn.setAttribute("download",""); btn.textContent = "Download"; }
+    else { btn.className += " soon"; btn.textContent = "Coming soon"; }
+
+    info.append(h, p, meta, btn);
+    el.append(icon, info);
+    list.appendChild(el);
+  });
+}
+q.addEventListener("input", render);
+render();
+</script>
+</body>
+</html>
